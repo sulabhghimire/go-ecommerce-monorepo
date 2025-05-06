@@ -1,0 +1,324 @@
+{
+	"info": {
+		"_postman_id": "83e70ec9-8163-41d2-b0fc-b26bcb45515e",
+		"name": "Ecommerce Go",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27842826"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Seller",
+					"item": [
+						{
+							"name": "Become  A Seller",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"first_name\": \"Sulabh\",\n    \"last_name\": \"Ghimire\",\n    \"phone_number\": \"9779866011039\",\n    \"bank_account_number\": 123456789,\n    \"swift_code\": \"A014\",\n    \"payment_type\": \"regular\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/become-seller",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"become-seller"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create a new Categoru",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Smart TVs\",\n    \"parent_id\": null,\n    \"image_url\": \"https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.sencor.com%2Fsmart-uhd-television%2Fsle-55us800tcsb&psig=AOvVaw2PrreDSAv9Hxas6NgMv3h8&ust=1746181280472000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCPiqpauGgo0DFQAAAAAdAAAAABAE\",\n    \"display_order\": 2\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/seller/categories",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"seller",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Category By Id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/categories/:catId",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"categories",
+										":catId"
+									],
+									"variable": [
+										{
+											"id": 0,
+											"key": "catId",
+											"value": "1",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/categories",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Cateogry",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Smart Monitor\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}/seller/categories/:catId",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"seller",
+										"categories",
+										":catId"
+									],
+									"variable": [
+										{
+											"id": 0,
+											"key": "catId",
+											"value": "1",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Category",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_URL}}/seller/categories/:catId",
+									"host": [
+										"{{BASE_URL}}"
+									],
+									"path": [
+										"seller",
+										"categories",
+										":catId"
+									],
+									"variable": [
+										{
+											"id": 0,
+											"key": "catId",
+											"value": "2",
+											"type": "string"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"sulabhghimire82@gmail.com\",\n    \"password\": \"123456\",\n    \"phone\": \"9866011039\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/users/register",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonResp = JSON.parse(responseBody)",
+									"pm.environment.set(\"user_token\", jsonResp.token)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\" : \"sulabhghimire82@gmail.com\",\n    \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/users/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/profile",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Verification Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/verify",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"verify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify the User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": 104940\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/verify",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"verify"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{user_token}}",
+						"type": "string"
+					}
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://127.0.0.1:9000",
+			"type": "string",
+			"disabled": true
+		}
+	]
+}

@@ -190,7 +190,7 @@ func (s UserService) BecomeSeller(id uint, input dto.SellerInput) (string, error
 
 	err = s.Repo.CreateBankAccount(account)
 	if err != nil {
-		fmt.Println("Error occurred while creating bank record for user %v", err)
+		fmt.Printf("Error occurred while creating bank record for user %v", err)
 		return "", errors.New("error creating bank info")
 	}
 

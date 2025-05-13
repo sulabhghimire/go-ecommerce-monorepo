@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"ecommerce/internal/api/rest"
+	"ecommerce/internal/domain"
 	"ecommerce/internal/dto"
 	"ecommerce/internal/repository"
 	"ecommerce/internal/service"
+	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,6 +24,7 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 
 	svc := service.UserService{
 		Repo:   repository.NewUserRepository(rh.DB),
+		PRepo:  repository.NewProductRepository(rh.DB),
 		Auth:   rh.Auth,
 		Config: rh.Config,
 	}
@@ -40,11 +44,13 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 
 	pvtRoutes.Get("/verify", handler.getVerificationCode)
 	pvtRoutes.Post("/verify", handler.verify)
+
 	pvtRoutes.Get("/profile", handler.getProfile)
 	pvtRoutes.Post("/profile", handler.createProfile)
+	pvtRoutes.Patch("/profile", handler.updateProfile)
 
-	pvtRoutes.Get("/cart", handler.addToCart)
-	pvtRoutes.Post("/cart", handler.getCart)
+	pvtRoutes.Get("/cart", handler.getCart)
+	pvtRoutes.Post("/cart", handler.addToCart)
 	pvtRoutes.Get("/order", handler.getOrders)
 	pvtRoutes.Get("/order/:id", handler.getOrder)
 
@@ -126,7 +132,6 @@ func (h UserHandler) verify(ctx *fiber.Ctx) error {
 	user := h.svc.Auth.GetCurrentUser(ctx)
 
 	payload := dto.VerificationCodeInput{}
-
 	err := ctx.BodyParser(&payload)
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -152,34 +157,95 @@ func (h UserHandler) getProfile(ctx *fiber.Ctx) error {
 
 	user := h.svc.Auth.GetCurrentUser(ctx)
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "user profile fetched successfully",
-		"data":    user,
-	})
+	profile, err := h.svc.GetProfile(user.ID)
+	if err != nil {
+		if errors.Is(err, domain.ErrorUserNotFound) {
+			return rest.NotFoundError(ctx, err)
+		}
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Profile fetched sucessfully", profile)
+
+}
+
+func (h UserHandler) updateProfile(ctx *fiber.Ctx) error {
+
+	payload := dto.ProfileInput{}
+	err := ctx.BodyParser(&payload)
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "please provide valid input",
+		})
+	}
+
+	user := h.svc.Auth.GetCurrentUser(ctx)
+
+	err = h.svc.UpdateProfile(user.ID, payload)
+	if err != nil {
+		if errors.Is(err, domain.ErrorUserNotFound) {
+			return rest.NotFoundError(ctx, err)
+		}
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Profile updated sucessfully", nil)
 
 }
 
 func (h UserHandler) createProfile(ctx *fiber.Ctx) error {
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
-	})
+	payload := dto.ProfileInput{}
+	if err := ctx.BodyParser(&payload); err != nil {
+		return rest.BadRequest(ctx, "please provide valid input")
+	}
+
+	user := h.svc.Auth.GetCurrentUser(ctx)
+	log.Println(user)
+
+	err := h.svc.CreateProfile(user.ID, payload)
+	if err != nil {
+		if errors.Is(err, domain.ErrorUserNotFound) {
+			return rest.NotFoundError(ctx, err)
+		}
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Profile created sucessfully", user)
 
 }
 
 func (h UserHandler) addToCart(ctx *fiber.Ctx) error {
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
-	})
+	paylaod := dto.CreateCartRequest{}
+	if err := ctx.BodyParser(&paylaod); err != nil {
+		return rest.BadRequest(ctx, "please provide valid payload")
+	}
+
+	user := h.svc.Auth.GetCurrentUser(ctx)
+
+	cartItems, err := h.svc.CreateCart(paylaod, user)
+	if err != nil {
+		if errors.Is(err, domain.ProductNotFound) {
+			return rest.NotFoundError(ctx, err)
+		}
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Item added to cart successfully", cartItems)
 
 }
 
 func (h UserHandler) getCart(ctx *fiber.Ctx) error {
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
-	})
+	user := h.svc.Auth.GetCurrentUser(ctx)
+
+	cart, err := h.svc.FindCart(user.ID)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Cart fetched sucessfully", cart)
 
 }
 

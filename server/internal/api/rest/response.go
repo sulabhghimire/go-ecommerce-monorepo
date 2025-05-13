@@ -7,7 +7,7 @@ import (
 )
 
 func ErrorMessage(ctx *fiber.Ctx, statusCode int, err error) error {
-	return ctx.Status(statusCode).JSON(err.Error())
+	return ctx.Status(statusCode).JSON(fiber.Map{"message": err.Error()})
 }
 
 func NotFoundError(ctx *fiber.Ctx, err error) error {

@@ -25,15 +25,15 @@ func StartServer(config config.AppConfig) {
 	log.Println("Database connected successfully")
 
 	// run migration
-	err = db.AutoMigrate(&domain.User{}, &domain.BankAccount{}, &domain.Category{}, &domain.Product{})
+	err = db.AutoMigrate(&domain.User{}, &domain.BankAccount{}, &domain.Category{}, &domain.Product{}, &domain.Cart{})
 	if err != nil {
 		log.Fatalf("error on  migration %v", err.Error())
 	}
 	log.Println("migration done successfully")
 
 	c := cors.New(cors.Config{
-    	AllowOrigins: "http://localhost:3000/",
-    	AllowHeaders: "Content-Type, Accept, Authorization",
+		AllowOrigins: "http://localhost:3000/",
+		AllowHeaders: "Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 	})
 

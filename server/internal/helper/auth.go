@@ -84,7 +84,7 @@ func (a Auth) VerifyToken(t string) (domain.User, error) {
 
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			fmt.Printf("signing method error %v")
+			fmt.Println("signing method error")
 			return nil, fmt.Errorf("unknown signing method %v", t.Header)
 		}
 		return []byte(a.Secret), nil

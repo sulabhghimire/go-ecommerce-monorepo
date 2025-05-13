@@ -6,10 +6,10 @@ import (
 	"ecommerce/internal/api/rest/handlers"
 	"ecommerce/internal/domain"
 	"ecommerce/internal/helper"
-	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -27,12 +27,18 @@ func StartServer(config config.AppConfig) {
 	// run migration
 	err = db.AutoMigrate(&domain.User{}, &domain.BankAccount{}, &domain.Category{}, &domain.Product{})
 	if err != nil {
-		log.Fatalln("error on  migration %v", err.Error())
+		log.Fatalf("error on  migration %v", err.Error())
 	}
-
 	log.Println("migration done successfully")
 
-	fmt.Println(config.AppSecret)
+	c := cors.New(cors.Config{
+    	AllowOrigins: "http://localhost:3000/",
+    	AllowHeaders: "Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+	})
+
+	app.Use(c)
+
 	auth := helper.SetUpAuth(config.AppSecret)
 
 	restHandler := &rest.RestHandler{

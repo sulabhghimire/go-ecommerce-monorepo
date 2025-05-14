@@ -145,19 +145,78 @@ func (s UserService) VerifyCode(id uint, code int) error {
 
 func (s UserService) CreateProfile(id uint, input dto.ProfileInput) error {
 
+	_, err := s.Repo.UpdateUser(id, domain.User{
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+	})
+	if err != nil {
+		return err
+	}
+
+	address := domain.Address{
+		AddressLine1: input.AddressInput.AddressLine1,
+		AddressLine2: input.AddressInput.AddressLine2,
+		City:         input.AddressInput.City,
+		Country:      input.AddressInput.Country,
+		PostCode:     input.AddressInput.PostCode,
+		UserId:       id,
+	}
+
+	err = s.Repo.CreateAddress(address)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
 
 func (s UserService) GetProfile(id uint) (*domain.User, error) {
 
-	return nil, nil
+	user, err := s.Repo.FindUserById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 
 }
 
-func (s UserService) UpdateProfile(id uint, input any) error {
+func (s UserService) UpdateProfile(id uint, input dto.ProfileInput) (*domain.User, error) {
 
-	return nil
+	user, err := s.Repo.FindUserById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.FirstName != "" {
+		user.FirstName = input.FirstName
+	}
+	if input.LastName != "" {
+		user.LastName = input.LastName
+	}
+
+	updatedUser, err := s.Repo.UpdateUser(id, user)
+	if err != nil {
+		return nil, err
+	}
+
+	address := domain.Address{
+		AddressLine1: input.AddressInput.AddressLine1,
+		AddressLine2: input.AddressInput.AddressLine2,
+		City:         input.AddressInput.City,
+		Country:      input.AddressInput.Country,
+		PostCode:     input.AddressInput.PostCode,
+		UserId:       id,
+	}
+	updatedAddress, err := s.Repo.UpdateAddress(address)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedUser.Address = *updatedAddress
+
+	return &updatedUser, nil
 
 }
 

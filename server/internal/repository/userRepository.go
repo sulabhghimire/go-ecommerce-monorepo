@@ -25,16 +25,16 @@ type UserRepository interface {
 	DeleteCartItems(uId uint) error
 
 	// Profile
-	CreateProfile(e domain.Address) error
-	UpdateProfile(e domain.Address) error
+	CreateAddress(e domain.Address) error
+	UpdateAddress(e domain.Address) (*domain.Address, error)
 }
 
 type userRepository struct {
 	db *gorm.DB
 }
 
-// CreateProfile implements UserRepository.
-func (r *userRepository) CreateProfile(e domain.Address) error {
+// CreateAddress implements UserRepository.
+func (r *userRepository) CreateAddress(e domain.Address) error {
 	err := r.db.Create(&e).Error
 	if err != nil {
 		log.Printf("create profile address error : %v", err)
@@ -43,17 +43,17 @@ func (r *userRepository) CreateProfile(e domain.Address) error {
 	return nil
 }
 
-// UpdateProfile implements UserRepository.
-func (r *userRepository) UpdateProfile(e domain.Address) error {
+// UpdateAddress implements UserRepository.
+func (r *userRepository) UpdateAddress(e domain.Address) (*domain.Address, error) {
 	err := r.db.Where("user_id=?", e.UserId).Updates(&e).Error
 	if err != nil {
 		log.Printf("update profile address error : %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.ErrorUserNotFound
+			return nil, domain.ErrorUserNotFound
 		}
-		return errors.New("error updating profile address")
+		return nil, errors.New("error updating profile address")
 	}
-	return nil
+	return &e, nil
 }
 
 // DeleteCartItems implements UserRepository.
@@ -171,11 +171,11 @@ func (r userRepository) FindUser(email string) (domain.User, error) {
 func (r userRepository) FindUserById(id uint) (domain.User, error) {
 	var user domain.User
 
-	err := r.db.First(&user, id).Error
+	err := r.db.Preload("Address").First(&user, id).Error
 	if err != nil {
 		log.Printf("find user by id error %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.User{}, errors.New("user doesn't exists")
+			return domain.User{}, domain.ErrorUserNotFound
 		}
 		return domain.User{}, errors.New("user doesn't exists")
 	}
@@ -191,7 +191,7 @@ func (r userRepository) UpdateUser(id uint, u domain.User) (domain.User, error) 
 	if err != nil {
 		log.Printf("error on update %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.User{}, errors.New("user doesn't exists")
+			return domain.User{}, domain.ErrorUserNotFound
 		}
 		return domain.User{}, errors.New("failed update user")
 	}

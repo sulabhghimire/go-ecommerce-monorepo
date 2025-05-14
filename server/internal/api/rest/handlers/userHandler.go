@@ -171,6 +171,7 @@ func (h UserHandler) getProfile(ctx *fiber.Ctx) error {
 
 func (h UserHandler) updateProfile(ctx *fiber.Ctx) error {
 
+	log.Println("---------------------------")
 	payload := dto.ProfileInput{}
 	err := ctx.BodyParser(&payload)
 	if err != nil {
@@ -181,7 +182,7 @@ func (h UserHandler) updateProfile(ctx *fiber.Ctx) error {
 
 	user := h.svc.Auth.GetCurrentUser(ctx)
 
-	err = h.svc.UpdateProfile(user.ID, payload)
+	_, err = h.svc.UpdateProfile(user.ID, payload)
 	if err != nil {
 		if errors.Is(err, domain.ErrorUserNotFound) {
 			return rest.NotFoundError(ctx, err)
@@ -201,7 +202,6 @@ func (h UserHandler) createProfile(ctx *fiber.Ctx) error {
 	}
 
 	user := h.svc.Auth.GetCurrentUser(ctx)
-	log.Println(user)
 
 	err := h.svc.CreateProfile(user.ID, payload)
 	if err != nil {
@@ -211,7 +211,7 @@ func (h UserHandler) createProfile(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 
-	return rest.SuccessResponse(ctx, http.StatusOK, "Profile created sucessfully", user)
+	return rest.SuccessResponse(ctx, http.StatusOK, "Profile created sucessfully", nil)
 
 }
 

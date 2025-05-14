@@ -7,7 +7,7 @@ type Address struct {
 	City         string `json:"city"`
 	PostCode     uint   `json:"post_code"`
 	Country      string `json:"country"`
-	UserId       string `json:"user_id"`
+	UserId       uint   `json:"user_id"`
 	CreatedAt    string `gorm:"default:current_timestamp"`
 	UpdatedAt    string `gorm:"default:current_timestamp"`
 }

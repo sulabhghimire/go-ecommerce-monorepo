@@ -24,6 +24,11 @@ type UserRepository interface {
 	DeleteCartById(id uint) error
 	DeleteCartItems(uId uint) error
 
+	// Order
+	CreateOrder(o domain.Order) error
+	FindOrders(uid uint) ([]domain.Order, error)
+	FindOrderById(id uint) (domain.Order, error)
+
 	// Profile
 	CreateAddress(e domain.Address) error
 	UpdateAddress(e domain.Address) (*domain.Address, error)
@@ -31,6 +36,43 @@ type UserRepository interface {
 
 type userRepository struct {
 	db *gorm.DB
+}
+
+// FindOrderById implements UserRepository.
+func (r *userRepository) FindOrderById(id uint) (domain.Order, error) {
+	var order domain.Order
+	err := r.db.Preload("Itens").First(&order, id).Error
+	if err != nil {
+		log.Printf("find order by id error %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return order, domain.ErrorOrderNotFound
+		}
+		return order, errors.New("order not found")
+	}
+	return order, nil
+}
+
+// FindOrders implements UserRepository.
+func (r *userRepository) FindOrders(uid uint) ([]domain.Order, error) {
+
+	var orders []domain.Order
+	err := r.db.Preload("Itens").Where("user_id=?", uid).Find(&orders).Error
+	if err != nil {
+		log.Printf("find order by user id error %v", err)
+		return orders, errors.New("failed to fetch orders")
+	}
+	return orders, nil
+
+}
+
+// CreateOrder implements UserRepository.
+func (r *userRepository) CreateOrder(o domain.Order) error {
+	err := r.db.Create(&o).Error
+	if err != nil {
+		log.Printf("create order error : %v", err)
+		return errors.New("error creating order")
+	}
+	return nil
 }
 
 // CreateAddress implements UserRepository.

@@ -323,6 +323,58 @@ func (s UserService) CreateCart(input dto.CreateCartRequest, u domain.User) ([]d
 
 func (s UserService) CreateOrder(u domain.User) (int, error) {
 
+	// get cart items
+	cartItems, err := s.Repo.FindCartItems(u.ID)
+	if err != nil {
+		return 0, err
+	}
+	if len(cartItems) == 0 {
+		return 0, domain.ErrorCartItemNotFound
+	}
+
+	// process payment
+	paymentId := "PAY12345678"
+	txId := "TX12345678"
+	orderRef, _ := helper.RandomNumber(8)
+
+	// create order with generated order ref
+	var amount float64
+	var orderItems []domain.OrderItem
+
+	for _, item := range cartItems {
+		amount += item.Price * float64(item.Qty)
+		orderItems = append(orderItems, domain.OrderItem{
+			ProductId: item.ProductId,
+			UserId:    item.UserId,
+			OrderId:   uint(orderRef),
+			Name:      item.Name,
+			ImageUrl:  item.ImageUrl,
+			SellerId:  item.SellerId,
+			Price:     item.Price,
+			Qty:       item.Qty,
+		})
+	}
+
+	order := domain.Order{
+		UserId:        u.ID,
+		Amount:        amount,
+		TransactionId: txId,
+		OrderRef:      uint(orderRef),
+		PaymentId:     paymentId,
+		Itens:         orderItems,
+	}
+
+	err = s.Repo.CreateOrder(order)
+	if err != nil {
+		return 0, err
+	}
+
+	// send order confirmation email to user
+
+	// remove cart items
+
+	// return order number
+
 	return 0, nil
 
 }

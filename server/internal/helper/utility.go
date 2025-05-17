@@ -7,7 +7,7 @@ import (
 
 func RandomNumber(length int) (int, error) {
 
-	const numbers = "123456790"
+	const numbers = "1234567890"
 
 	buffer := make([]byte, length)
 	_, err := rand.Read(buffer)
@@ -17,7 +17,7 @@ func RandomNumber(length int) (int, error) {
 
 	numLength := len(numbers)
 
-	for i := 0; i < length; i++ {
+	for i := range length {
 		buffer[i] = numbers[int(buffer[i])%numLength]
 	}
 

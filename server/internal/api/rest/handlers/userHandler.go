@@ -7,7 +7,6 @@ import (
 	"ecommerce/internal/repository"
 	"ecommerce/internal/service"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -51,6 +50,8 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 
 	pvtRoutes.Get("/cart", handler.getCart)
 	pvtRoutes.Post("/cart", handler.addToCart)
+
+	pvtRoutes.Get("/order", handler.createOrder)
 	pvtRoutes.Get("/order", handler.getOrders)
 	pvtRoutes.Get("/order/:id", handler.getOrder)
 
@@ -171,7 +172,6 @@ func (h UserHandler) getProfile(ctx *fiber.Ctx) error {
 
 func (h UserHandler) updateProfile(ctx *fiber.Ctx) error {
 
-	log.Println("---------------------------")
 	payload := dto.ProfileInput{}
 	err := ctx.BodyParser(&payload)
 	if err != nil {
@@ -251,10 +251,17 @@ func (h UserHandler) getCart(ctx *fiber.Ctx) error {
 
 func (h UserHandler) createOrder(ctx *fiber.Ctx) error {
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
-	})
+	user := h.svc.Auth.GetCurrentUser(ctx)
 
+	orderRef, err := h.svc.CreateOrder(user)
+	if err != nil {
+		if errors.Is(err, domain.ErrorCartItemNotFound) {
+			return rest.NotFoundError(ctx, err)
+		}
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusCreated, "Order created sucessfully", map[string]int{"order_ref": orderRef})
 }
 
 func (h UserHandler) getOrders(ctx *fiber.Ctx) error {

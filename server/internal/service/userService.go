@@ -372,21 +372,25 @@ func (s UserService) CreateOrder(u domain.User) (int, error) {
 	// send order confirmation email to user
 
 	// remove cart items
+	err = s.Repo.DeleteCartItems(u.ID)
+	if err != nil {
+		return 0, err
+	}
 
 	// return order number
 
-	return 0, nil
+	return orderRef, nil
 
 }
 
-func (s UserService) GetOrders(u domain.User) ([]interface{}, error) {
+func (s UserService) GetOrders(uId uint) ([]domain.Order, error) {
 
-	return nil, nil
+	return s.Repo.FindOrders(uId)
 
 }
 
-func (s UserService) GetOrderById(id uint, uId uint) (interface{}, error) {
+func (s UserService) GetOrderById(id uint, uId uint) (domain.Order, error) {
 
-	return nil, nil
+	return s.Repo.FindUserOrderById(id, uId)
 
 }

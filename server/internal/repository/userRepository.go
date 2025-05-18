@@ -28,6 +28,7 @@ type UserRepository interface {
 	CreateOrder(o domain.Order) error
 	FindOrders(uid uint) ([]domain.Order, error)
 	FindOrderById(id uint) (domain.Order, error)
+	FindUserOrderById(id uint, uId uint) (domain.Order, error)
 
 	// Profile
 	CreateAddress(e domain.Address) error
@@ -36,6 +37,20 @@ type UserRepository interface {
 
 type userRepository struct {
 	db *gorm.DB
+}
+
+// FindUserOrderById implements UserRepository.
+func (r *userRepository) FindUserOrderById(id uint, uId uint) (domain.Order, error) {
+	var order domain.Order
+	err := r.db.Where("order_ref=? AND user_id=?", id, uId).First(&order).Error
+	if err != nil {
+		log.Printf("find order by user id error %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return order, domain.ErrorOrderNotFound
+		}
+		return order, errors.New("order not found")
+	}
+	return order, nil
 }
 
 // FindOrderById implements UserRepository.
@@ -213,7 +228,10 @@ func (r userRepository) FindUser(email string) (domain.User, error) {
 func (r userRepository) FindUserById(id uint) (domain.User, error) {
 	var user domain.User
 
-	err := r.db.Preload("Address").First(&user, id).Error
+	err := r.db.Preload("Address").
+		Preload("Cart").
+		Preload("Orders").
+		First(&user, id).Error
 	if err != nil {
 		log.Printf("find user by id error %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {

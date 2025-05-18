@@ -8,6 +8,7 @@ import (
 	"ecommerce/internal/service"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -51,7 +52,7 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 	pvtRoutes.Get("/cart", handler.getCart)
 	pvtRoutes.Post("/cart", handler.addToCart)
 
-	pvtRoutes.Get("/order", handler.createOrder)
+	pvtRoutes.Post("/order", handler.createOrder)
 	pvtRoutes.Get("/order", handler.getOrders)
 	pvtRoutes.Get("/order/:id", handler.getOrder)
 
@@ -266,17 +267,34 @@ func (h UserHandler) createOrder(ctx *fiber.Ctx) error {
 
 func (h UserHandler) getOrders(ctx *fiber.Ctx) error {
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
-	})
+	user := h.svc.Auth.GetCurrentUser(ctx)
+	orders, err := h.svc.GetOrders(user.ID)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Orders fetched sucessfully", orders)
 
 }
 
 func (h UserHandler) getOrder(ctx *fiber.Ctx) error {
 
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "register",
-	})
+	orderId, err := strconv.Atoi(ctx.Params("id"))
+	if err != nil || orderId < 0 {
+		return rest.BadRequest(ctx, "please provide a valid order id")
+	}
+
+	user := h.svc.Auth.GetCurrentUser(ctx)
+
+	order, err := h.svc.GetOrderById(uint(orderId), user.ID)
+	if err != nil {
+		if errors.Is(err, domain.ErrorOrderNotFound) {
+			return rest.NotFoundError(ctx, err)
+		}
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, http.StatusOK, "Order fetched sucessfully", order)
 
 }
 

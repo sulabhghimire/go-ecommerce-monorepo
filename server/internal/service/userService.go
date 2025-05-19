@@ -6,7 +6,7 @@ import (
 	"ecommerce/internal/dto"
 	"ecommerce/internal/helper"
 	"ecommerce/internal/repository"
-	"ecommerce/notification"
+	"ecommerce/pkg/notification"
 	"errors"
 	"fmt"
 	"log"

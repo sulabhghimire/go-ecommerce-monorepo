@@ -4,12 +4,14 @@ import (
 	"ecommerce/internal/api/rest"
 	"ecommerce/internal/repository"
 	"ecommerce/internal/service"
+	"ecommerce/pkg/payment"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type TransactionHandler struct {
-	svc service.TransactionService
+	svc           service.TransactionService
+	paymentClient payment.PaymentClient
 }
 
 func SetupTransactionRoutes(rh *rest.RestHandler) {
@@ -24,7 +26,8 @@ func SetupTransactionRoutes(rh *rest.RestHandler) {
 	}
 
 	handler := TransactionHandler{
-		svc: svc,
+		svc:           svc,
+		paymentClient: rh.Pc,
 	}
 
 	pvtRoutes := app.Group("/transactions", rh.Auth.Authorize)

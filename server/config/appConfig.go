@@ -13,11 +13,18 @@ type TwilioConfig struct {
 	FromContactNumber string
 }
 
+type StripeConfig struct {
+	StripeSecretKey string
+	SuccessUrl      string
+	CancelUrl       string
+}
+
 type AppConfig struct {
 	ServerPort   string
 	Dsn          string
 	AppSecret    string
 	TwilioConfig TwilioConfig
+	StripeConfig StripeConfig
 }
 
 func SetUpEnv() (cfg AppConfig, err error) {
@@ -33,27 +40,42 @@ func SetUpEnv() (cfg AppConfig, err error) {
 
 	Dsn := os.Getenv("DSN")
 	if len(httpPort) < 1 {
-		return AppConfig{}, errors.New("DSN env not found")
+		return AppConfig{}, errors.New("dsn env not found")
 	}
 
 	appSecret := os.Getenv("APP_SECRET")
 	if len(appSecret) < 1 {
-		return AppConfig{}, errors.New("App secret env not found")
+		return AppConfig{}, errors.New("app secret env not found")
 	}
 
 	twilioAccountSID := os.Getenv("TWILIO_ACCOUNT_SID")
 	if len(twilioAccountSID) < 1 {
-		return AppConfig{}, errors.New("Twilio Account SID env not found")
+		return AppConfig{}, errors.New("twilio Account SID env not found")
 	}
 
 	twilioAuthToken := os.Getenv("TWILIO_AUTH_TOKEN")
 	if len(twilioAuthToken) < 1 {
-		return AppConfig{}, errors.New("Twilio Auth Token env not found")
+		return AppConfig{}, errors.New("twilio Auth Token env not found")
 	}
 
 	twilioFromPhoneNumber := os.Getenv("TWILIO_FROM_PHONE_NUMBER")
 	if len(twilioFromPhoneNumber) < 1 {
-		return AppConfig{}, errors.New("Twilio From Phone Number env not found")
+		return AppConfig{}, errors.New("twilio From Phone Number env not found")
+	}
+
+	stripeSecretKey := os.Getenv("STRIPE_SECRET_KEY")
+	if len(stripeSecretKey) < 1 {
+		return AppConfig{}, errors.New("stripe secret key env not found")
+	}
+
+	stripeSuccessUrl := os.Getenv("STRIPE_SUCCESS_URL")
+	if len(stripeSuccessUrl) < 1 {
+		return AppConfig{}, errors.New("stripe success url env not found")
+	}
+
+	stripeCancelUrl := os.Getenv("STRIPE_CANCEL_URL")
+	if len(stripeCancelUrl) < 1 {
+		return AppConfig{}, errors.New("stripe cancel url env not found")
 	}
 
 	twilioConfig := TwilioConfig{
@@ -62,6 +84,12 @@ func SetUpEnv() (cfg AppConfig, err error) {
 		FromContactNumber: twilioFromPhoneNumber,
 	}
 
-	return AppConfig{ServerPort: httpPort, Dsn: Dsn, AppSecret: appSecret, TwilioConfig: twilioConfig}, nil
+	stripeConfig := StripeConfig{
+		StripeSecretKey: stripeSecretKey,
+		SuccessUrl:      stripeSuccessUrl,
+		CancelUrl:       stripeCancelUrl,
+	}
+
+	return AppConfig{ServerPort: httpPort, Dsn: Dsn, AppSecret: appSecret, TwilioConfig: twilioConfig, StripeConfig: stripeConfig}, nil
 
 }

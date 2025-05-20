@@ -2,15 +2,20 @@ package handlers
 
 import (
 	"ecommerce/internal/api/rest"
+	"ecommerce/internal/domain"
+	"ecommerce/internal/helper"
 	"ecommerce/internal/repository"
 	"ecommerce/internal/service"
 	"ecommerce/pkg/payment"
+	"errors"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type TransactionHandler struct {
 	svc           service.TransactionService
+	userSvc       service.UserService
 	paymentClient payment.PaymentClient
 }
 
@@ -19,6 +24,16 @@ func SetupTransactionRoutes(rh *rest.RestHandler) {
 	app := rh.App
 
 	transactionRepo := repository.NewTransactionRepository(rh.DB)
+	userRepo := repository.NewUserRepository(rh.DB)
+	productRepo := repository.NewProductRepository(rh.DB)
+
+	userSvc := service.UserService{
+		Repo:   userRepo,
+		Auth:   rh.Auth,
+		PRepo:  productRepo,
+		Config: rh.Config,
+	}
+
 	svc := service.TransactionService{
 		Auth:   rh.Auth,
 		Config: rh.Config,
@@ -27,6 +42,7 @@ func SetupTransactionRoutes(rh *rest.RestHandler) {
 
 	handler := TransactionHandler{
 		svc:           svc,
+		userSvc:       userSvc,
 		paymentClient: rh.Pc,
 	}
 
@@ -38,9 +54,48 @@ func SetupTransactionRoutes(rh *rest.RestHandler) {
 	sellerRoutes.Get("/orders/:id", handler.GetOrderById)
 }
 
-func (h *TransactionHandler) MakePayment(c *fiber.Ctx) error {
+func (h *TransactionHandler) MakePayment(ctx *fiber.Ctx) error {
 
-	return rest.SuccessResponse(c, fiber.StatusOK, "Payment successful", nil)
+	user := h.svc.Auth.GetCurrentUser(ctx)
+
+	activePayment, err := h.svc.GetActivePayments(user.ID)
+	if err != nil {
+		if !errors.Is(err, domain.ErrorUserInitialPaymentNotFound) {
+			return rest.InternalError(ctx, err)
+		}
+	}
+
+	if activePayment.ID > 0 {
+		return rest.SuccessResponse(ctx, http.StatusOK, "payment session created", activePayment.PaymentUrl)
+	}
+
+	cartItems, amount, err := h.userSvc.FindCart(user.ID)
+	if err != nil {
+		rest.InternalError(ctx, err)
+	}
+	if len(cartItems) == 0 {
+		rest.BadRequest(ctx, "You don't have any item to checkout")
+	}
+
+	orderId, err := helper.RandomString(8)
+	if err != nil {
+		rest.InternalError(ctx, err)
+
+	}
+
+	sessionResult, err := h.paymentClient.CreatePayment(amount, user.ID, orderId)
+	if err != nil {
+		rest.InternalError(ctx, err)
+	}
+
+	err = h.svc.StoreCreatedPayment(user.ID, sessionResult, amount, orderId)
+	if err != nil {
+		return rest.InternalError(ctx, err)
+	}
+
+	return rest.SuccessResponse(ctx, fiber.StatusOK, "Payment session created", map[string]interface{}{
+		"session_url": sessionResult.URL,
+	})
 }
 
 func (h *TransactionHandler) GetOrders(c *fiber.Ctx) error {

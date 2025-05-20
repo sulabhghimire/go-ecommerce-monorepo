@@ -8,7 +8,6 @@ import (
 	"ecommerce/internal/service"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -241,7 +240,7 @@ func (h UserHandler) getCart(ctx *fiber.Ctx) error {
 
 	user := h.svc.Auth.GetCurrentUser(ctx)
 
-	cart, err := h.svc.FindCart(user.ID)
+	cart, _, err := h.svc.FindCart(user.ID)
 	if err != nil {
 		return rest.InternalError(ctx, err)
 	}
@@ -262,7 +261,7 @@ func (h UserHandler) createOrder(ctx *fiber.Ctx) error {
 		return rest.InternalError(ctx, err)
 	}
 
-	return rest.SuccessResponse(ctx, http.StatusCreated, "Order created sucessfully", map[string]int{"order_ref": orderRef})
+	return rest.SuccessResponse(ctx, http.StatusCreated, "Order created sucessfully", map[string]interface{}{"order_ref": orderRef})
 }
 
 func (h UserHandler) getOrders(ctx *fiber.Ctx) error {
@@ -279,14 +278,14 @@ func (h UserHandler) getOrders(ctx *fiber.Ctx) error {
 
 func (h UserHandler) getOrder(ctx *fiber.Ctx) error {
 
-	orderId, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil || orderId < 0 {
+	orderId := ctx.Params("id")
+	if orderId == "" {
 		return rest.BadRequest(ctx, "please provide a valid order id")
 	}
 
 	user := h.svc.Auth.GetCurrentUser(ctx)
 
-	order, err := h.svc.GetOrderById(uint(orderId), user.ID)
+	order, err := h.svc.GetOrderById(orderId, user.ID)
 	if err != nil {
 		if errors.Is(err, domain.ErrorOrderNotFound) {
 			return rest.NotFoundError(ctx, err)

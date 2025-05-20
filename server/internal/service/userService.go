@@ -263,9 +263,19 @@ func (s UserService) BecomeSeller(id uint, input dto.SellerInput) (string, error
 
 }
 
-func (s UserService) FindCart(id uint) ([]domain.Cart, error) {
+func (s UserService) FindCart(id uint) ([]domain.Cart, float64, error) {
 
-	return s.Repo.FindCartItems(id)
+	cartItems, err := s.Repo.FindCartItems(id)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var totalAmount float64
+	for _, item := range cartItems {
+		totalAmount += item.Price * float64(item.Qty)
+	}
+
+	return cartItems, totalAmount, nil
 
 }
 
@@ -321,32 +331,29 @@ func (s UserService) CreateCart(input dto.CreateCartRequest, u domain.User) ([]d
 
 }
 
-func (s UserService) CreateOrder(u domain.User) (int, error) {
+func (s UserService) CreateOrder(u domain.User) (string, error) {
 
 	// get cart items
-	cartItems, err := s.Repo.FindCartItems(u.ID)
+	cartItems, amount, err := s.FindCart(u.ID)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	if len(cartItems) == 0 {
-		return 0, domain.ErrorCartItemNotFound
+		return "", domain.ErrorCartItemNotFound
 	}
 
 	// process payment
 	paymentId := "PAY12345678"
 	txId := "TX12345678"
-	orderRef, _ := helper.RandomNumber(8)
+	orderRef, _ := helper.RandomString(8)
 
 	// create order with generated order ref
-	var amount float64
 	var orderItems []domain.OrderItem
 
 	for _, item := range cartItems {
-		amount += item.Price * float64(item.Qty)
 		orderItems = append(orderItems, domain.OrderItem{
 			ProductId: item.ProductId,
 			UserId:    item.UserId,
-			OrderId:   uint(orderRef),
 			Name:      item.Name,
 			ImageUrl:  item.ImageUrl,
 			SellerId:  item.SellerId,
@@ -359,14 +366,14 @@ func (s UserService) CreateOrder(u domain.User) (int, error) {
 		UserId:        u.ID,
 		Amount:        amount,
 		TransactionId: txId,
-		OrderRef:      uint(orderRef),
+		OrderRef:      orderRef,
 		PaymentId:     paymentId,
 		Itens:         orderItems,
 	}
 
 	err = s.Repo.CreateOrder(order)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	// send order confirmation email to user
@@ -374,7 +381,7 @@ func (s UserService) CreateOrder(u domain.User) (int, error) {
 	// remove cart items
 	err = s.Repo.DeleteCartItems(u.ID)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	// return order number
@@ -389,7 +396,7 @@ func (s UserService) GetOrders(uId uint) ([]domain.Order, error) {
 
 }
 
-func (s UserService) GetOrderById(id uint, uId uint) (domain.Order, error) {
+func (s UserService) GetOrderById(id string, uId uint) (domain.Order, error) {
 
 	return s.Repo.FindUserOrderById(id, uId)
 

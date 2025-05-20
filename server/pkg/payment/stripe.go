@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/checkout/session"
+	"github.com/stripe/stripe-go/v78"
+	"github.com/stripe/stripe-go/v78/checkout/session"
 )
 
 type PaymentClient interface {
-	CreatePayment(amount float64, userId uint, orderId uint) (*stripe.CheckoutSession, error)
+	CreatePayment(amount float64, userId uint, orderId string) (*stripe.CheckoutSession, error)
 	GetPaymentStatus(pId string) (*stripe.CheckoutSession, error)
 }
 
@@ -21,8 +21,7 @@ type payment struct {
 }
 
 // CreatePayment implements PaymentClient.
-func (p *payment) CreatePayment(amount float64, userId uint, orderId uint) (*stripe.CheckoutSession, error) {
-
+func (p *payment) CreatePayment(amount float64, userId uint, orderId string) (*stripe.CheckoutSession, error) {
 	stripe.Key = p.stripeSecretKey
 	amountInCents := int64(amount * 100)
 
@@ -33,24 +32,26 @@ func (p *payment) CreatePayment(amount float64, userId uint, orderId uint) (*str
 		CancelURL:          stripe.String(p.faliureUrl),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Amount:      stripe.Int64(amountInCents),
-				Currency:    stripe.String("usd"),
-				Name:        stripe.String("Order Payment"),
-				Quantity:    stripe.Int64(1),
-				Description: stripe.String("Payment for order ID: " + string(orderId)),
-				Images:      []*string{stripe.String("https://example.com/image.png")},
+				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+					Currency:   stripe.String("usd"),
+					UnitAmount: stripe.Int64(amountInCents),
+				},
+				Quantity: stripe.Int64(1),
 			},
 		},
 	}
 
 	params.AddMetadata("user_id", fmt.Sprintf("%d", userId))
-	params.AddMetadata("order_id", fmt.Sprintf("%d", orderId))
+	params.AddMetadata("order_id", orderId)
 
 	session, err := session.New(params)
 	if err != nil {
 		log.Printf("Error creating Stripe session: %v", err)
-		return nil, errors.New("payment creation failed ")
+		return nil, errors.New("payment creation failed")
 	}
+
+	// Log or return session.URL if you want to redirect user
+	log.Printf("Stripe session URL: %s", session.URL)
 
 	return session, nil
 }

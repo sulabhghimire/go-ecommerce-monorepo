@@ -4,7 +4,6 @@ import "time"
 
 type OrderItem struct {
 	ID        uint      `gorm:"PrimaryKey" json:"id"`
-	OrderId   uint      `json:"order_id"`
 	ProductId uint      `json:"product_id"`
 	UserId    uint      `json:"user_id"`
 	Name      string    `json:"name"`

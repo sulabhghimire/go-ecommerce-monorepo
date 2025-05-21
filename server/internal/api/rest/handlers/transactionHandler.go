@@ -8,6 +8,7 @@ import (
 	"ecommerce/internal/service"
 	"ecommerce/pkg/payment"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -60,32 +61,33 @@ func (h *TransactionHandler) MakePayment(ctx *fiber.Ctx) error {
 
 	activePayment, err := h.svc.GetActivePayments(user.ID)
 	if err != nil {
+		fmt.Println(errors.Is(err, domain.ErrorUserInitialPaymentNotFound))
 		if !errors.Is(err, domain.ErrorUserInitialPaymentNotFound) {
 			return rest.InternalError(ctx, err)
 		}
 	}
 
-	if activePayment.ID > 0 {
+	if activePayment != nil {
 		return rest.SuccessResponse(ctx, http.StatusOK, "payment session created", activePayment.PaymentUrl)
 	}
 
 	cartItems, amount, err := h.userSvc.FindCart(user.ID)
 	if err != nil {
-		rest.InternalError(ctx, err)
+		return rest.InternalError(ctx, err)
 	}
 	if len(cartItems) == 0 {
-		rest.BadRequest(ctx, "You don't have any item to checkout")
+		return rest.BadRequest(ctx, "You don't have any item to checkout")
 	}
 
 	orderId, err := helper.RandomString(8)
 	if err != nil {
-		rest.InternalError(ctx, err)
+		return rest.InternalError(ctx, err)
 
 	}
 
 	sessionResult, err := h.paymentClient.CreatePayment(amount, user.ID, orderId)
 	if err != nil {
-		rest.InternalError(ctx, err)
+		return rest.InternalError(ctx, err)
 	}
 
 	err = h.svc.StoreCreatedPayment(user.ID, sessionResult, amount, orderId)

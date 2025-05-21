@@ -23,7 +23,7 @@ type transactionRepository struct {
 // FindPayment implements TransactionRepository.
 func (r *transactionRepository) FindInitialPayment(u uint) (*domain.Payment, error) {
 	var payment *domain.Payment
-	err := r.db.First(&payment, "user_id=? AND status=initial", u).Order("created_at desc").Error
+	err := r.db.First(&payment, "user_id=? AND status=?", u, "initial").Order("created_at desc").Error
 	if err != nil {
 		fmt.Printf("data base error cccured %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {

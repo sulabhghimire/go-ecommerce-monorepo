@@ -35,6 +35,9 @@ func (p *payment) CreatePayment(amount float64, userId uint, orderId string) (*s
 				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 					Currency:   stripe.String("usd"),
 					UnitAmount: stripe.Int64(amountInCents),
+					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+						Name: stripe.String("Electronics"),
+					},
 				},
 				Quantity: stripe.Int64(1),
 			},

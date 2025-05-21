@@ -54,7 +54,7 @@ func (p productRepository) DeleteProduct(id uint) error {
 	if err != nil {
 		log.Printf("db_error: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.ProductNotFound
+			return domain.ErrorProductNotFound
 		}
 		return errors.New("error deleting product")
 	}
@@ -70,7 +70,7 @@ func (p productRepository) EditProduct(e *domain.Product) (*domain.Product, erro
 	if err != nil {
 		log.Printf("db_error: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, domain.ProductNotFound
+			return nil, domain.ErrorProductNotFound
 		}
 		return nil, errors.New("error deleting product")
 	}
@@ -86,7 +86,7 @@ func (p productRepository) GetProductById(id uint) (*domain.Product, error) {
 	if err != nil {
 		log.Printf("db_error: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, domain.ProductNotFound
+			return nil, domain.ErrorProductNotFound
 		}
 		return nil, errors.New("error fetching product of given id")
 	}

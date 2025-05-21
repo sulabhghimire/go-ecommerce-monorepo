@@ -226,7 +226,7 @@ func (h UserHandler) addToCart(ctx *fiber.Ctx) error {
 
 	cartItems, err := h.svc.CreateCart(paylaod, user)
 	if err != nil {
-		if errors.Is(err, domain.ProductNotFound) {
+		if errors.Is(err, domain.ErrorProductNotFound) {
 			return rest.NotFoundError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)

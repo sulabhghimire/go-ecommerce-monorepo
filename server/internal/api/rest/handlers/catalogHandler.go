@@ -17,7 +17,7 @@ import (
 
 type CatalogHandler struct {
 	catalogSvc service.CatalogService
-	prodSvc service.ProductService
+	prodSvc    service.ProductService
 }
 
 func SetUpCatalogRoutes(rh *rest.RestHandler) {
@@ -38,10 +38,9 @@ func SetUpCatalogRoutes(rh *rest.RestHandler) {
 		Config: rh.Config,
 	}
 
-
 	handler := CatalogHandler{
 		catalogSvc: catalogSvc,
-		prodSvc:prodSvc,
+		prodSvc:    prodSvc,
 	}
 
 	app.Get("/products", handler.GetProducts)
@@ -84,7 +83,7 @@ func (h CatalogHandler) GetCategoryById(ctx *fiber.Ctx) error {
 
 	cat, err := h.catalogSvc.GetCategory(uint(catId))
 	if err != nil {
-		if errors.Is(err, domain.CategoryNotFound) {
+		if errors.Is(err, domain.ErrorCategoryNotFound) {
 			return rest.NotFoundError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)
@@ -125,7 +124,7 @@ func (h CatalogHandler) EditCategories(ctx *fiber.Ctx) error {
 
 	cat, err := h.catalogSvc.EditCategory(uint(catId), payload)
 	if err != nil {
-		if errors.Is(err, domain.CategoryNotFound) {
+		if errors.Is(err, domain.ErrorCategoryNotFound) {
 			return rest.NotFoundError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)
@@ -143,7 +142,7 @@ func (h CatalogHandler) DeleteCategories(ctx *fiber.Ctx) error {
 
 	err = h.catalogSvc.DeleteCategory(uint(catId))
 	if err != nil {
-		if errors.Is(err, domain.CategoryNotFound) {
+		if errors.Is(err, domain.ErrorCategoryNotFound) {
 			return rest.NotFoundError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)
@@ -188,7 +187,7 @@ func (h CatalogHandler) GetProduct(ctx *fiber.Ctx) error {
 
 	prod, err := h.prodSvc.GetProductById(uint(prodId))
 	if err != nil {
-		if errors.Is(err, domain.ProductNotFound) {
+		if errors.Is(err, domain.ErrorProductNotFound) {
 			return rest.NotFoundError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)
@@ -205,7 +204,7 @@ func (h CatalogHandler) UpdateStock(ctx *fiber.Ctx) error {
 	}
 
 	paylaod := dto.UpdateStockRequest{}
-	if err = ctx.BodyParser(&paylaod); err !=nil {
+	if err = ctx.BodyParser(&paylaod); err != nil {
 		return rest.BadRequest(ctx, "please provide a valid request body")
 	}
 
@@ -213,9 +212,9 @@ func (h CatalogHandler) UpdateStock(ctx *fiber.Ctx) error {
 
 	prod, err := h.prodSvc.UpdateProductStock(uint(prodId), paylaod.Stock, user)
 	if err != nil {
-		if errors.Is(err, domain.ProductNotFound) {
+		if errors.Is(err, domain.ErrorProductNotFound) {
 			return rest.NotFoundError(ctx, err)
-		}else if errors.Is(err, helper.NOT_AUTHORIZED_ERROR) {
+		} else if errors.Is(err, helper.NOT_AUTHORIZED_ERROR) {
 			return rest.NotAuhtorizedError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)
@@ -233,11 +232,11 @@ func (h CatalogHandler) DeleteProducts(ctx *fiber.Ctx) error {
 
 	user := h.prodSvc.Auth.GetCurrentUser(ctx)
 
-	err = h.prodSvc.DeleteProduct(uint(prodId),  user)
+	err = h.prodSvc.DeleteProduct(uint(prodId), user)
 	if err != nil {
-		if errors.Is(err, domain.ProductNotFound) {
+		if errors.Is(err, domain.ErrorProductNotFound) {
 			return rest.NotFoundError(ctx, err)
-		}else if errors.Is(err, helper.NOT_AUTHORIZED_ERROR) {
+		} else if errors.Is(err, helper.NOT_AUTHORIZED_ERROR) {
 			return rest.NotAuhtorizedError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)
@@ -254,7 +253,7 @@ func (h CatalogHandler) EditProducts(ctx *fiber.Ctx) error {
 	}
 
 	paylaod := dto.CreateProductRequest{}
-	if err = ctx.BodyParser(&paylaod); err !=nil {
+	if err = ctx.BodyParser(&paylaod); err != nil {
 		return rest.BadRequest(ctx, "please provide a valid request body")
 	}
 
@@ -262,9 +261,9 @@ func (h CatalogHandler) EditProducts(ctx *fiber.Ctx) error {
 
 	prod, err := h.prodSvc.EditProduct(uint(prodId), paylaod, user)
 	if err != nil {
-		if errors.Is(err, domain.ProductNotFound) {
+		if errors.Is(err, domain.ErrorProductNotFound) {
 			return rest.NotFoundError(ctx, err)
-		}else if errors.Is(err, helper.NOT_AUTHORIZED_ERROR) {
+		} else if errors.Is(err, helper.NOT_AUTHORIZED_ERROR) {
 			return rest.NotAuhtorizedError(ctx, err)
 		}
 		return rest.InternalError(ctx, err)

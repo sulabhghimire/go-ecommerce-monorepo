@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	ProductNotFound   = errors.New("product of given id not found")
-	StockNotAvailable = errors.New("stock not available")
+	ErrorProductNotFound   = errors.New("product of given id not found")
+	ErrorStockNotAvailable = errors.New("stock not available")
 )
 
 type Product struct {

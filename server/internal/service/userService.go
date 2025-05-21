@@ -308,7 +308,7 @@ func (s UserService) CreateCart(input dto.CreateCartRequest, u domain.User) ([]d
 
 		product, err := s.PRepo.GetProductById(input.ProductId)
 		if err != nil {
-			return nil, domain.ProductNotFound
+			return nil, domain.ErrorProductNotFound
 		}
 
 		err = s.Repo.CreateCart(domain.Cart{

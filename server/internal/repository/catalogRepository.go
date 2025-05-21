@@ -57,7 +57,7 @@ func (r catalogRepository) FindCategoryById(id uint) (*domain.Category, error) {
 	if err != nil {
 		log.Printf("Find category failed %v.\n", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, domain.CategoryNotFound
+			return nil, domain.ErrorCategoryNotFound
 		}
 		return nil, errors.New("failed to find category of given id")
 	}
@@ -71,7 +71,7 @@ func (r catalogRepository) EditCategory(e *domain.Category) (*domain.Category, e
 	if err != nil {
 		log.Printf("Find to update category %v.\n", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, domain.CategoryNotFound
+			return nil, domain.ErrorCategoryNotFound
 		}
 		return nil, errors.New("failed to update category of given id")
 	}
@@ -85,7 +85,7 @@ func (r catalogRepository) DeleteCategory(id uint) error {
 	if err != nil {
 		log.Printf("Find to delete category %v.\n", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.CategoryNotFound
+			return domain.ErrorCategoryNotFound
 		}
 		return errors.New("failed to delete category of given id")
 	}

@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	CategoryNotFound = errors.New("category of given id not found")
+	ErrorCategoryNotFound = errors.New("category of given id not found")
 )
 
 type Category struct {

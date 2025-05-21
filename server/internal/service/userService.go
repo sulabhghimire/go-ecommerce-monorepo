@@ -368,7 +368,7 @@ func (s UserService) CreateOrder(u domain.User) (string, error) {
 		TransactionId: txId,
 		OrderRef:      orderRef,
 		PaymentId:     paymentId,
-		Itens:         orderItems,
+		Items:         orderItems,
 	}
 
 	err = s.Repo.CreateOrder(order)

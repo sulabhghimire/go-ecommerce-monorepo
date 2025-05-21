@@ -17,7 +17,7 @@ type Order struct {
 	TransactionId string      `json:"transaction_id"`
 	OrderRef      string      `json:"order_ref" gorm:"index;unique;not null"`
 	PaymentId     string      `json:"payment_id"`
-	Itens         []OrderItem `json:"items"`
+	Items         []OrderItem `json:"items"`
 	CreatedAt     time.Time   `json:"created_at" gorm:"default:current_timestamp"`
 	UpdatedAt     time.Time   `json:"updated_at" gorm:"default:current_timestamp"`
 }

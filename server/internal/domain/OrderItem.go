@@ -6,6 +6,7 @@ type OrderItem struct {
 	ID        uint      `gorm:"PrimaryKey" json:"id"`
 	ProductId uint      `json:"product_id"`
 	UserId    uint      `json:"user_id"`
+	OrderId   uint      `json:"order_id"`
 	Name      string    `json:"name"`
 	ImageUrl  string    `json:"image_url"`
 	SellerId  uint      `json:"seller_id"`

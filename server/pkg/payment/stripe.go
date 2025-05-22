@@ -6,12 +6,12 @@ import (
 	"log"
 
 	"github.com/stripe/stripe-go/v78"
-	"github.com/stripe/stripe-go/v78/checkout/session"
+	"github.com/stripe/stripe-go/v78/paymentintent"
 )
 
 type PaymentClient interface {
-	CreatePayment(amount float64, userId uint, orderId string) (*stripe.CheckoutSession, error)
-	GetPaymentStatus(pId string) (*stripe.CheckoutSession, error)
+	CreatePayment(amount float64, userId uint, orderId string) (*stripe.PaymentIntent, error)
+	GetPaymentStatus(pId string) (*stripe.PaymentIntent, error)
 }
 
 type payment struct {
@@ -21,56 +21,42 @@ type payment struct {
 }
 
 // CreatePayment implements PaymentClient.
-func (p *payment) CreatePayment(amount float64, userId uint, orderId string) (*stripe.CheckoutSession, error) {
+func (p *payment) CreatePayment(amount float64, userId uint, orderId string) (*stripe.PaymentIntent, error) {
 	stripe.Key = p.stripeSecretKey
 	amountInCents := int64(amount * 100)
 
-	params := &stripe.CheckoutSessionParams{
+	params := &stripe.PaymentIntentParams{
+		Amount:             stripe.Int64(amountInCents),
+		Currency:           stripe.String(string(stripe.CurrencyUSD)),
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
-		SuccessURL:         stripe.String(p.successUrl),
-		CancelURL:          stripe.String(p.faliureUrl),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{
-				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-					Currency:   stripe.String("usd"),
-					UnitAmount: stripe.Int64(amountInCents),
-					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String("Electronics"),
-					},
-				},
-				Quantity: stripe.Int64(1),
-			},
-		},
 	}
 
 	params.AddMetadata("user_id", fmt.Sprintf("%d", userId))
 	params.AddMetadata("order_id", orderId)
 
-	session, err := session.New(params)
+	pi, err := paymentintent.New(params)
 	if err != nil {
-		log.Printf("Error creating Stripe session: %v", err)
+		log.Printf("Error creating payment intent: %v", err)
 		return nil, errors.New("payment creation failed")
 	}
 
 	// Log or return session.URL if you want to redirect user
-	log.Printf("Stripe session URL: %s", session.URL)
-
-	return session, nil
+	return pi, nil
 }
 
 // GetPaymentStatus implements PaymentClient.
-func (p *payment) GetPaymentStatus(pId string) (*stripe.CheckoutSession, error) {
+func (p *payment) GetPaymentStatus(pId string) (*stripe.PaymentIntent, error) {
 
 	stripe.Key = p.stripeSecretKey
+	params := &stripe.PaymentIntentParams{}
 
-	session, err := session.Get(pId, nil)
+	result, err := paymentintent.Get(pId, params)
 	if err != nil {
 		log.Printf("Error retrieving Stripe session: %v", err)
-		return nil, errors.New("payment status retrieval failed")
+		return nil, errors.New("error fetching payment status")
 	}
 
-	return session, nil
+	return result, nil
 
 }
 

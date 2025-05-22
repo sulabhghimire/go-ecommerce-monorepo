@@ -32,14 +32,14 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 	}
 
 	// Public endpoints
-	pubRoutes := app.Group("/users")
+	pubRoutes := app.Group("/")
 
 	pubRoutes.Post("/register", handler.register)
 	pubRoutes.Post("/login", handler.login)
 
 	// Private endpoints
 
-	pvtRoutes := pubRoutes.Group("/", rh.Auth.Authorize)
+	pvtRoutes := pubRoutes.Group("/users", rh.Auth.Authorize)
 
 	pvtRoutes.Get("/verify", handler.getVerificationCode)
 	pvtRoutes.Post("/verify", handler.verify)
@@ -51,7 +51,6 @@ func SetupUserRoutes(rh *rest.RestHandler) {
 	pvtRoutes.Get("/cart", handler.getCart)
 	pvtRoutes.Post("/cart", handler.addToCart)
 
-	pvtRoutes.Post("/order", handler.createOrder)
 	pvtRoutes.Get("/order", handler.getOrders)
 	pvtRoutes.Get("/order/:id", handler.getOrder)
 
@@ -247,21 +246,6 @@ func (h UserHandler) getCart(ctx *fiber.Ctx) error {
 
 	return rest.SuccessResponse(ctx, http.StatusOK, "Cart fetched sucessfully", cart)
 
-}
-
-func (h UserHandler) createOrder(ctx *fiber.Ctx) error {
-
-	user := h.svc.Auth.GetCurrentUser(ctx)
-
-	orderRef, err := h.svc.CreateOrder(user)
-	if err != nil {
-		if errors.Is(err, domain.ErrorCartItemNotFound) {
-			return rest.NotFoundError(ctx, err)
-		}
-		return rest.InternalError(ctx, err)
-	}
-
-	return rest.SuccessResponse(ctx, http.StatusCreated, "Order created sucessfully", map[string]interface{}{"order_ref": orderRef})
 }
 
 func (h UserHandler) getOrders(ctx *fiber.Ctx) error {

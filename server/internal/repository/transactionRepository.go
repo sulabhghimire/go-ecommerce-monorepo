@@ -12,12 +12,26 @@ import (
 type TransactionRepository interface {
 	CreatePayment(payment *domain.Payment) error
 	FindInitialPayment(u uint) (*domain.Payment, error)
+	UpdatePayment(payment *domain.Payment) error
 	FindOrders(uID uint) ([]domain.Order, error)
 	FindOrderById(orderId, uID uint) (dto.SellerOrderDetails, error)
 }
 
 type transactionRepository struct {
 	db *gorm.DB
+}
+
+// UpdatePayment implements TransactionRepository.
+func (r *transactionRepository) UpdatePayment(payment *domain.Payment) error {
+	err := r.db.Save(payment).Error
+	if err != nil {
+		fmt.Printf("data base error cccured %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.ErrorPaymentNotFound
+		}
+		return errors.New("some error occured")
+	}
+	return nil
 }
 
 // FindPayment implements TransactionRepository.

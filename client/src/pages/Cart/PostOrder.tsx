@@ -1,7 +1,7 @@
 import { Box, CircularProgress, Container } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "../../state/hooks";
-import { ConfirmOrder } from "../../api/payment-api";
+import { VerifyPayment } from "../../api/payment-api";
 
 export const PostOrder = () => {
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export const PostOrder = () => {
   }, []);
 
   const confirmOrder = async () => {
-    const { data, message } = await ConfirmOrder(profile.token);
+    const { data, message } = await VerifyPayment(profile.token);
     if (data) {
       console.log(JSON.stringify(data));
     } else {

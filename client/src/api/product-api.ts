@@ -8,7 +8,7 @@ export const FetchCartItemsApi = async (
 ): Promise<ResponseModel> => {
   try {
     const auth = axiosAuth();
-    const response = await auth.get(`${BASE_URL}/cart`);
+    const response = await auth.get(`${BASE_URL}/users/cart`);
     return response.data;
   } catch (error) {
     console.log(error);

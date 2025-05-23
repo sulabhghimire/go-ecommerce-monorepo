@@ -62,6 +62,7 @@ export const MakePayment: React.FC<MakePaymentProps> = ({
   };
 
   const displayPaymentForm = () => {
+    console.log(pk, clientSecret);
     if (pk && clientSecret) {
       return (
         <Elements options={options} stripe={stripePromise()}>

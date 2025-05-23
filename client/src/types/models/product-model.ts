@@ -1,11 +1,14 @@
 export interface CartModel {
-  item_id: string;
-  cart_id: string;
-  product_id: string;
+  id: number;
+  user_id: number;
+  product_id: number;
   name: string;
-  price: string;
   image_url: string;
-  item_qty: number;
+  seller_id: number;
+  price: number;
+  qty: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductModel {

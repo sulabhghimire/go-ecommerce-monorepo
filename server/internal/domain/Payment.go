@@ -28,7 +28,7 @@ type Payment struct {
 type PaymentStatus string
 
 const (
-	PaymentStatusInitial PaymentStatus = "inital"
+	PaymentStatusInitial PaymentStatus = "initial"
 	PaymensStatusSuccess PaymentStatus = "success"
 	PaymentStatusFailed  PaymentStatus = "failed"
 	PaymentStatusPending PaymentStatus = "pending"

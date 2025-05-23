@@ -23,7 +23,7 @@ interface CartProps {}
 
 interface PaymentCredential {
   secret: string;
-  publishableKey: string;
+  pubKey: string;
 }
 
 const CartPage: React.FC<CartProps> = ({}) => {
@@ -40,7 +40,7 @@ const CartPage: React.FC<CartProps> = ({}) => {
   >(false);
 
   const userReducer = useAppSelector((state) => state.userReducer);
-
+  console.log(userReducer);
   const profile = userReducer.userProfile;
 
   useEffect(() => {
@@ -54,8 +54,10 @@ const CartPage: React.FC<CartProps> = ({}) => {
   const onInitPayment = async () => {
     const { data, message } = await CollectPaymentApi(profile.token);
     if (data) {
-      console.log(data);
-      const credential = data as PaymentCredential;
+      const credential: PaymentCredential = {
+        pubKey: data.pubkey,
+        secret: data.secret,
+      };
       setPaymentCredential(credential);
     } else {
       console.log(`Error: ${message}`);
@@ -65,11 +67,11 @@ const CartPage: React.FC<CartProps> = ({}) => {
   const onGetCartItems = async () => {
     const { data, message } = await FetchCartItemsApi(profile.token);
     if (data) {
-      setAppFee(Number(data.appFee));
-      const items = data.cartItems as CartModel[];
+      // setAppFee(Number());
+      const items = data as CartModel[];
       if (Array.isArray(items)) {
         const totalAmount = items.reduce(
-          (sum, item) => sum + Number(item.price) * item.item_qty,
+          (sum, item) => sum + Number(item.price) * item.qty,
           0
         );
         setProductPrice(totalAmount);
@@ -79,6 +81,8 @@ const CartPage: React.FC<CartProps> = ({}) => {
       console.log(`Error: ${message}`);
     }
   };
+
+  console.log(cartItems);
 
   const displayCart = () => {
     return cartItems.map((item) => {
@@ -143,7 +147,7 @@ const CartPage: React.FC<CartProps> = ({}) => {
                 fontWeight: "600",
               }}
             >
-              {item.item_qty}
+              {item.qty}
             </p>
           </div>
           <div
@@ -254,11 +258,12 @@ const CartPage: React.FC<CartProps> = ({}) => {
 
   const paymentOption = () => {
     if (paymentCredential) {
+      console.log(paymentCredential, "----------");
       return (
         <MakePayment
           totalAmount={getTotal()}
           clientSecret={paymentCredential.secret}
-          pk={paymentCredential.publishableKey}
+          pk={paymentCredential.pubKey}
           onSuccess={(paymentId: string) => {
             console.log("payment was successful!");
             navigate(`/post-order?id=${paymentId}`);
@@ -273,16 +278,16 @@ const CartPage: React.FC<CartProps> = ({}) => {
     return <></>;
   };
 
-  // return (
-  //   <Container
-  //     style={{
-  //       width: "80%",
-  //       paddingTop: 20,
-  //     }}
-  //   >
-  //     {paymentCredential ? paymentOption() : cartOption()}
-  //   </Container>
-  // );
+  return (
+    <Container
+      style={{
+        width: "80%",
+        paddingTop: 20,
+      }}
+    >
+      {paymentCredential ? paymentOption() : cartOption()}
+    </Container>
+  );
 
   const onChangeTab = (event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
@@ -321,7 +326,7 @@ const CartPage: React.FC<CartProps> = ({}) => {
   };
 
   const displayCartAndOrders = () => {
-    if (profile.token) {
+    if (profile) {
       return (
         <TabContext value={currentTab}>
           <Box
@@ -358,7 +363,9 @@ const CartPage: React.FC<CartProps> = ({}) => {
               padding: 0,
             }}
             value="1"
-          ></TabPanel>
+          >
+            {cartOption()}
+          </TabPanel>
           <TabPanel
             style={{
               width: "100%",

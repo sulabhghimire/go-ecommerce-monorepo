@@ -141,9 +141,12 @@ func (h *TransactionHandler) VerifyPayment(ctx *fiber.Ctx) error {
 
 	if paymentRes.Status == "succeeded" {
 		// Create order here
-		h.userSvc.CreateOrder(user.ID, activePayment.OrderId, activePayment.PaymentId, activePayment.Amount)
 		paymentStatus = "success"
 		msg = "Payment verified sucessfully"
+		err = h.userSvc.CreateOrder(user.ID, activePayment.OrderId, activePayment.PaymentId, activePayment.Amount)
+		if err != nil {
+			return rest.InternalError(ctx, err)
+		}
 	}
 
 	h.svc.UpdatePayment(user.ID, paymentStatus, paymentLogs)
